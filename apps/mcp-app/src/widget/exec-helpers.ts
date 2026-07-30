@@ -129,6 +129,7 @@ export function createExecHelpers(editor: Editor) {
 	const helpers = {
 		createShapeId,
 		createBindingId,
+		toRichText,
 		Box,
 		Vec,
 		Mat,
@@ -205,22 +206,12 @@ function serializeResult(result: unknown) {
 	}
 }
 
-async function loadExecModule(code: string) {
+// The destructured names come from the helpers object itself: a hand-written
+// list silently drops any helper it forgets, and exec code that calls the
+// missing one fails with a bare "x is not defined".
+async function loadExecModule(code: string, helperNames: string[]) {
 	const moduleSource = `export default async function runExec({ editor, helpers }) {
-	const {
-		createShapeId,
-		createBindingId,
-		Box,
-		Vec,
-		Mat,
-		clamp,
-		degreesToRadians,
-		radiansToDegrees,
-		getArrowBindings,
-		fitFrameToContent,
-		createArrowBetweenShapes,
-		boxShapes,
-	} = helpers
+	const { ${helperNames.join(', ')} } = helpers
 
 	return await (async () => {
 ${code}
@@ -246,7 +237,7 @@ export async function executeCode(
 		 * cannot import blob: URLs), so tests inject a compiler here. Production
 		 * callers never pass this.
 		 */
-		loadModule?(code: string): Promise<ExecModule>
+		loadModule?(code: string, helperNames: string[]): Promise<ExecModule>
 	}
 ): Promise<{ success: boolean; result?: unknown; error?: string }> {
 	const focusedEditor = createFocusedEditorProxy(editor, getRequiredEmbeddedMethodMap())
@@ -256,7 +247,7 @@ export async function executeCode(
 	enterExecSandbox()
 
 	try {
-		const runExec = await (options?.loadModule ?? loadExecModule)(code)
+		const runExec = await (options?.loadModule ?? loadExecModule)(code, Object.keys(helpers))
 		const result = await Promise.race([
 			runExec({ editor: focusedEditor, helpers }),
 			new Promise((_, reject) =>

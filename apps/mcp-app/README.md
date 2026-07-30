@@ -2,6 +2,10 @@
 
 This is the tldraw MCP app. It exposes an interactive tldraw canvas to AI agents via the [Model Context Protocol app specification](https://github.com/modelcontextprotocol/ext-apps/), so you can work in tldraw with agents in any MCP client that supports the MCP app spec.
 
+## For AI agents
+
+The [MCP agent guide](./docs/MCP_AGENT_GUIDE.md) is the short version of what an agent needs to drive the canvas well: search before exec, the simplified shape format, reusing the canvas id, and the escaping and ID gotchas that otherwise cost a retry.
+
 ## Architecture
 
 The app has two parts: a **server** and a **widget**.

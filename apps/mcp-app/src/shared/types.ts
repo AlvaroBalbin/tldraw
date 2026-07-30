@@ -89,8 +89,15 @@ export const MCP_SERVER_TITLE = 'tldraw Canvas'
 export const MCP_SERVER_DESCRIPTION =
 	'An interactive tldraw canvas with tools for diagramming, drawing, and more.'
 export const MCP_SERVER_WEBSITE_URL = 'https://www.tldraw.com'
-export const MCP_SERVER_INSTRUCTIONS =
-	'Use `search` to query the tldraw Editor API spec (e.g. search for methods by category or name). Use `exec` to run JavaScript on the canvas — your code receives `editor` (the tldraw Editor instance) and helpers like toRichText, createShapeId, createArrowBetweenShapes. The current canvas state is kept in model context as raw TLShape, asset, and binding data.'
+export const MCP_SERVER_INSTRUCTIONS = `Use \`search\` to query the tldraw Editor API spec (e.g. search for methods by category or name). Use \`exec\` to run JavaScript on the canvas — your code receives \`editor\` (the tldraw Editor instance) and helpers like toRichText, createShapeId, createArrowBetweenShapes. The current canvas state is kept in model context as raw TLShape, asset, and binding data.
+
+The \`exec\` runtime is narrower than a stock Editor: \`editor\` takes plain string shape IDs and flat shapes such as \`{ _type: 'rectangle', shapeId: 'box1', text: 'Hello' }\`, and only a fixed set of helpers is in scope (search \`spec.helpers\` for the list). Start from the examples in the \`exec\` tool description, and \`search\` before assuming any other Editor method or helper exists.
+
+Omit \`canvasId\` to start a new canvas; pass the \`canvasId\` from a previous exec result to keep editing that canvas.
+
+Shape text renders real line breaks, so escape newlines exactly once in the JSON \`code\` string: \`\\n\`, not \`\\\\n\`.
+
+Shapes read back from \`editor.getCurrentPageShapes()\` carry \`shapeId\`, not \`id\`, so bulk operations look like \`editor.deleteShapes(editor.getCurrentPageShapes().map((s) => s.shapeId))\`.`
 
 // This URI must stay STABLE across deploys: hosts bind the app widget to it at
 // connector registration and cache the widget HTML served here, so a stale

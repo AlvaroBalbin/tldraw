@@ -46,6 +46,8 @@ export function registerExecTool(
 
 Each canvas has a unique \`canvasId\`. Omit \`canvasId\` to create a new blank canvas. To edit an existing canvas, pass the \`canvasId\` that was returned by a previous exec call.
 
+The runtime is narrower than a stock Editor, so prefer the flat \`createShape\` form in the examples below and use \`search\` to confirm any other method or helper exists before calling it. Escape newlines exactly once in the JSON \`code\` string (\`\\n\`, not \`\\\\n\`) or shape text shows a literal \`\\n\`. Shapes you read back carry \`shapeId\`, not \`id\`.
+
 Shapes and text grow depending on the amount of text they have. Use clever scripting to ensure there are no unintended overlaps.
 
 Examples:

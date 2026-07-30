@@ -49,8 +49,12 @@ const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor as
 	...args: string[]
 ) => (editor: unknown, helpers: unknown) => Promise<unknown>
 
-async function loadModule(code: string) {
-	const compiled = new AsyncFunction('editor', 'helpers', code)
+async function loadModule(code: string, helperNames: string[]) {
+	const compiled = new AsyncFunction(
+		'editor',
+		'helpers',
+		`const { ${helperNames.join(', ')} } = helpers\n${code}`
+	)
 	return async ({ editor, helpers }: { editor: Editor; helpers: unknown }) =>
 		compiled(editor, helpers)
 }
@@ -95,5 +99,15 @@ describe('executeCode timeout race', () => {
 		await executeCode(stubEditor, 'return 0', { loadModule })
 		expect(typeof window.setTimeout).toBe('function')
 		expect(typeof window.fetch).toBe('function')
+	})
+})
+
+describe('exec helper scope', () => {
+	// The server instructions advertise `toRichText`, and models reach for it
+	// whenever they write raw `props: { richText }` shapes, so it has to resolve
+	// inside exec code and not just inside the helper implementations.
+	it('exposes toRichText', async () => {
+		const result = await executeCode(stubEditor, 'return typeof toRichText', { loadModule })
+		expect(result).toEqual({ success: true, result: 'function' })
 	})
 })
