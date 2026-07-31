@@ -1,0 +1,74 @@
+---
+title: Angular
+status: published
+author: tldraw
+date: 7/31/2026
+order: 8
+keywords:
+  - angular
+  - ngAfterViewInit
+  - NgZone
+  - createRoot
+---
+
+Angular apps render tldraw by mounting a React root from a component's view lifecycle hooks. Read [non-React frameworks](/frameworks/non-react) first for the general pattern; this page covers the Angular specifics.
+
+```bash
+npm install tldraw react react-dom
+```
+
+## Mounting
+
+The Angular CLI doesn't compile JSX, so pass the [Tldraw](?) component to `createElement` rather than writing a `.tsx` wrapper. Mount from `ngAfterViewInit`, once the container element exists, and release the root from `ngOnDestroy`:
+
+```ts
+import { AfterViewInit, Component, ElementRef, NgZone, OnDestroy, ViewChild } from '@angular/core'
+import { createElement } from 'react'
+import { createRoot, Root } from 'react-dom/client'
+import { Tldraw } from 'tldraw'
+
+@Component({
+	selector: 'app-canvas',
+	template: '<div #container class="canvas"></div>',
+	styles: ['.canvas { position: fixed; inset: 0; }'],
+})
+export class CanvasComponent implements AfterViewInit, OnDestroy {
+	@ViewChild('container') container!: ElementRef<HTMLDivElement>
+
+	private root: Root | null = null
+
+	constructor(private zone: NgZone) {}
+
+	ngAfterViewInit() {
+		this.zone.runOutsideAngular(() => {
+			this.root = createRoot(this.container.nativeElement)
+			this.root.render(createElement(Tldraw))
+		})
+	}
+
+	ngOnDestroy() {
+		this.root?.unmount()
+		this.root = null
+	}
+}
+```
+
+`runOutsideAngular` matters here. The editor attaches pointer, wheel, and keyboard listeners to the canvas, and every one of them would otherwise trigger an Angular change detection pass.
+
+## CSS
+
+Add the stylesheet to the `styles` array of your build target in `angular.json`:
+
+```json
+"styles": ["src/styles.css", "node_modules/tldraw/tldraw.css"]
+```
+
+## License key
+
+Angular builds don't inline environment variables, so read the key from your `environment.ts` and pass it as a prop:
+
+```ts
+this.root.render(createElement(Tldraw, { licenseKey: environment.tldrawLicenseKey }))
+```
+
+See [license key](/sdk-features/license-key) for more.

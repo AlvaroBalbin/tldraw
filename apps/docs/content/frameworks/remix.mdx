@@ -1,0 +1,79 @@
+---
+title: Remix
+status: published
+author: tldraw
+date: 7/31/2026
+order: 2
+keywords:
+  - remix
+  - react router
+  - ClientOnly
+  - ssr
+  - hydration
+---
+
+Remix renders every route on the server. The [Tldraw](?) component runs in the browser only, so render it behind a client-only wrapper.
+
+```bash
+npm install tldraw
+```
+
+## Client-only rendering
+
+A component that renders nothing until the browser has hydrated is enough. Taking children as a function keeps Remix from building the element tree on the server:
+
+```tsx
+import { ReactNode, useEffect, useState } from 'react'
+
+export function ClientOnly({ children }: { children: () => ReactNode }) {
+	const [hydrated, setHydrated] = useState(false)
+
+	useEffect(() => setHydrated(true), [])
+
+	return hydrated ? <>{children()}</> : null
+}
+```
+
+Wrap the canvas with it in your route:
+
+```tsx
+import { Tldraw } from 'tldraw'
+import { ClientOnly } from '~/components/ClientOnly'
+
+export default function Index() {
+	return (
+		<div style={{ position: 'fixed', inset: 0 }}>
+			<ClientOnly>{() => <Tldraw />}</ClientOnly>
+		</div>
+	)
+}
+```
+
+The [remix-utils](https://github.com/sergiodxa/remix-utils) package exports a `ClientOnly` with the same API if you'd rather not write your own.
+
+## CSS
+
+Route modules load stylesheets through the `links` export. Import the URL of `tldraw/tldraw.css` and return it as a stylesheet link:
+
+```tsx
+import type { LinksFunction } from '@remix-run/node'
+import tldrawCss from 'tldraw/tldraw.css?url'
+
+export const links: LinksFunction = () => [{ rel: 'stylesheet', href: tldrawCss }]
+```
+
+Put this in `app/root.tsx` to load the stylesheet everywhere, or in the canvas route to load it only where it's needed.
+
+## License key
+
+Remix has no build-time prefix for client environment variables, so pass the key through the `licenseKey` prop:
+
+```tsx
+<Tldraw licenseKey={licenseKey} />
+```
+
+Load it in the route's `loader` and read it with `useLoaderData`. See [license key](/sdk-features/license-key) for more.
+
+## React Router
+
+React Router v7 in framework mode server-renders routes the same way Remix does, so the same wrapper and the same `links` export apply. The type import moves to `react-router`.

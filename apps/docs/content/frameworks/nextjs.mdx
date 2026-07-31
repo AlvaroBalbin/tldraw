@@ -1,0 +1,98 @@
+---
+title: Next.js
+status: published
+author: tldraw
+date: 7/31/2026
+order: 1
+keywords:
+  - next
+  - nextjs
+  - app router
+  - pages router
+  - server components
+  - use client
+---
+
+Next.js renders components on the server by default. The [Tldraw](?) component runs in the browser only, so it needs the `'use client'` directive and an entry in your Next.js config that keeps the SDK out of the server bundle.
+
+```bash
+npm install tldraw
+```
+
+## App Router
+
+Put `'use client'` at the top of any file that renders tldraw:
+
+```tsx
+'use client'
+
+import { Tldraw } from 'tldraw'
+import 'tldraw/tldraw.css'
+
+export default function Home() {
+	return (
+		<div style={{ position: 'fixed', inset: 0 }}>
+			<Tldraw />
+		</div>
+	)
+}
+```
+
+Then add `tldraw` to `serverExternalPackages` in your Next.js config. This keeps Next.js from bundling the SDK into the server build, where none of the browser APIs it expects exist:
+
+```js
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+	serverExternalPackages: ['tldraw'],
+}
+
+export default nextConfig
+```
+
+On Next.js 14 and earlier this option is called `experimental.serverComponentsExternalPackages`.
+
+## Pages Router
+
+The Pages Router pre-renders every page, and it can't import global CSS outside of `pages/_app`. Load the SDK with a dynamic import instead:
+
+```tsx
+import dynamic from 'next/dynamic'
+
+const Tldraw = dynamic(async () => (await import('tldraw')).Tldraw, { ssr: false })
+
+export default function Home() {
+	return (
+		<div style={{ position: 'fixed', inset: 0 }}>
+			<Tldraw />
+		</div>
+	)
+}
+```
+
+Import the stylesheet from `pages/_app.tsx`:
+
+```tsx
+import 'tldraw/tldraw.css'
+```
+
+## CSS
+
+In the App Router you can import `tldraw/tldraw.css` from any file under `app/`, including the client component itself. You can also import it from a global stylesheet:
+
+```css
+@import url('tldraw/tldraw.css');
+
+body {
+	overscroll-behavior: none;
+}
+```
+
+Setting `overscroll-behavior: none` on the body stops the page from scrolling or refreshing when a gesture runs past the edge of the canvas.
+
+## License key
+
+The SDK reads `NEXT_PUBLIC_TLDRAW_LICENSE_KEY` from the environment, so you don't need to pass the `licenseKey` prop. See [license key](/sdk-features/license-key) for the other ways to provide a key.
+
+## Example
+
+The [Next.js template](https://github.com/tldraw/nextjs-template) is a working App Router project with all of the above.

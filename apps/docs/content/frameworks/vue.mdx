@@ -1,0 +1,91 @@
+---
+title: Vue
+status: published
+author: tldraw
+date: 7/31/2026
+order: 5
+keywords:
+  - vue
+  - vite
+  - createRoot
+  - onMounted
+---
+
+Vue apps render tldraw by mounting a React root inside a template ref. Read [non-React frameworks](/frameworks/non-react) first for the general pattern; this page covers the Vue specifics.
+
+```bash
+npm install tldraw react react-dom
+```
+
+## Vite configuration
+
+Load both the React and Vue plugins. The React plugin compiles the `.tsx` wrapper, the Vue plugin compiles your `.vue` files:
+
+```ts
+import react from '@vitejs/plugin-react'
+import vue from '@vitejs/plugin-vue'
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+	plugins: [react(), vue()],
+})
+```
+
+## Mounting
+
+Write the wrapper as a React component:
+
+```tsx
+import { Tldraw } from 'tldraw'
+import 'tldraw/tldraw.css'
+
+export function TldrawWrapper() {
+	return <Tldraw />
+}
+```
+
+Then mount it from `onMounted` and tear it down from `onUnmounted`:
+
+```vue
+<script setup lang="ts">
+import { createElement } from 'react'
+import { createRoot, Root } from 'react-dom/client'
+import { onMounted, onUnmounted, useTemplateRef } from 'vue'
+import { TldrawWrapper } from './TldrawWrapper'
+
+const tldrawWrapperEl = useTemplateRef('tldraw')
+let root: Root | null = null
+
+onMounted(() => {
+	if (!tldrawWrapperEl.value) return
+	root = createRoot(tldrawWrapperEl.value)
+	root.render(createElement(TldrawWrapper))
+})
+
+onUnmounted(() => {
+	if (root) {
+		root.unmount()
+		root = null
+	}
+})
+</script>
+
+<template>
+	<main ref="tldraw" />
+</template>
+
+<style scoped>
+main {
+	position: fixed;
+	inset: 0;
+}
+</style>
+```
+
+## License key
+
+With Vite, the SDK reads `VITE_TLDRAW_LICENSE_KEY` from the environment. See [license key](/sdk-features/license-key) for the other ways to provide a key.
+
+## Example
+
+The [Vue template](https://github.com/tldraw/vue-template) is a working Vue 3 and Vite project. If you're using Nuxt, see the [Nuxt guide](/frameworks/nuxt) instead.

@@ -32,6 +32,11 @@ const sectionConfig: Record<string, SearchConfig | null> = {
 		priority: 9,
 		splitHeadings: true,
 	},
+	frameworks: {
+		index: 'docs',
+		priority: 9,
+		splitHeadings: true,
+	},
 	examples: {
 		index: 'docs',
 		priority: 8,

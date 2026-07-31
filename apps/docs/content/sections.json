@@ -35,6 +35,13 @@
 		"sidebar_behavior": "show-links"
 	},
 	{
+		"id": "frameworks",
+		"title": "Frameworks",
+		"description": "Guides to using tldraw with popular web frameworks.",
+		"categories": [],
+		"sidebar_behavior": "show-links"
+	},
+	{
 		"id": "community",
 		"title": "Community",
 		"description": "Community resources for the tldraw SDK.",

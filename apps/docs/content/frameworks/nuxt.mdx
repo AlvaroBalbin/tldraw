@@ -1,0 +1,82 @@
+---
+title: Nuxt
+status: published
+author: tldraw
+date: 7/31/2026
+order: 6
+keywords:
+  - nuxt
+  - vue
+  - ClientOnly
+  - ssr
+---
+
+Nuxt server-renders Vue components by default. Mount tldraw's React root from a component that Nuxt only ever renders in the browser. Read [non-React frameworks](/frameworks/non-react) first for the general pattern; this page covers the Nuxt specifics.
+
+```bash
+npm install tldraw react react-dom
+```
+
+## A client-only component
+
+Any component in `components/` whose filename ends in `.client.vue` is skipped during server rendering. Put the canvas in `components/TldrawCanvas.client.vue`:
+
+```vue
+<script setup lang="ts">
+import { createElement } from 'react'
+import { createRoot, type Root } from 'react-dom/client'
+import { Tldraw } from 'tldraw'
+import { onMounted, onUnmounted, useTemplateRef } from 'vue'
+import 'tldraw/tldraw.css'
+
+const container = useTemplateRef('container')
+let root: Root | null = null
+
+onMounted(() => {
+	if (!container.value) return
+	root = createRoot(container.value)
+	root.render(createElement(Tldraw))
+})
+
+onUnmounted(() => {
+	root?.unmount()
+	root = null
+})
+</script>
+
+<template>
+	<div ref="container" class="canvas" />
+</template>
+
+<style scoped>
+.canvas {
+	position: fixed;
+	inset: 0;
+}
+</style>
+```
+
+Nuxt auto-imports the component, so a page only needs the tag:
+
+```vue
+<template>
+	<TldrawCanvas />
+</template>
+```
+
+Wrapping the tag in Nuxt's built-in `<ClientOnly>` component does the same job if you'd rather keep the filename plain.
+
+## JSX
+
+Nuxt's Vite setup compiles Vue, not JSX, so this guide passes the [Tldraw](?) component to `createElement` instead of writing a `.tsx` wrapper. If you want JSX, add `@vitejs/plugin-react` through the `vite.plugins` array in `nuxt.config.ts` and restrict it to `.tsx` files so it doesn't touch Vue's output.
+
+## License key
+
+Nuxt exposes public values through `runtimeConfig`, which the SDK can't read on its own. Pass the key as a prop instead:
+
+```ts
+const licenseKey = useRuntimeConfig().public.tldrawLicenseKey
+root.render(createElement(Tldraw, { licenseKey }))
+```
+
+See [license key](/sdk-features/license-key) for more.

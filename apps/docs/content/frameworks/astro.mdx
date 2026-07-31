@@ -1,0 +1,66 @@
+---
+title: Astro
+status: published
+author: tldraw
+date: 7/31/2026
+order: 3
+keywords:
+  - astro
+  - islands
+  - client:only
+  - hydration
+---
+
+Astro renders components to HTML at build time and hydrates them as islands. The [Tldraw](?) component can't be rendered on the server, so it needs the `client:only` directive.
+
+Add the React integration, which installs `@astrojs/react` and registers it in your Astro config:
+
+```bash
+npx astro add react
+npm install tldraw
+```
+
+## Setup
+
+Write the canvas as a React component:
+
+```tsx
+import { Tldraw } from 'tldraw'
+import 'tldraw/tldraw.css'
+
+export function Canvas() {
+	return (
+		<div style={{ position: 'fixed', inset: 0 }}>
+			<Tldraw />
+		</div>
+	)
+}
+```
+
+Then render it from an `.astro` page with `client:only="react"`:
+
+```astro
+---
+import { Canvas } from '../components/Canvas'
+---
+
+<html lang="en">
+	<body>
+		<Canvas client:only="react" />
+	</body>
+</html>
+```
+
+The `"react"` value tells Astro which renderer to use at runtime. Without it Astro doesn't know how to hydrate the island.
+
+## Why client:only
+
+`client:only` is the one directive that skips server rendering entirely. The others, including `client:load`, render the component to HTML during the build and then hydrate it in the browser. The editor measures text and lays out the canvas against a real DOM, so there's nothing useful for Astro to pre-render.
+
+## CSS
+
+Importing `tldraw/tldraw.css` from the React component is enough. Astro's bundler collects the stylesheet and adds it to the page. You can also import it from an `.astro` file's frontmatter or from a global stylesheet.
+
+## License key
+
+The SDK reads `PUBLIC_TLDRAW_LICENSE_KEY` from the environment, which matches Astro's prefix for client-side variables. See [license key](/sdk-features/license-key) for the other ways to provide a key.

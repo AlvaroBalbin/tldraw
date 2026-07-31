@@ -1,0 +1,117 @@
+---
+title: Non-React frameworks
+status: published
+author: tldraw
+date: 7/31/2026
+order: 4
+keywords:
+  - non-react
+  - createRoot
+  - react-dom
+  - mount
+  - wrapper
+---
+
+The tldraw SDK ships as a React component. To use it from Vue, Svelte, Angular, or any other framework, you mount a React root into an element that the host framework owns. Every one of the guides below follows this pattern; only the lifecycle hooks and the build configuration change.
+
+## The pattern
+
+Start with a React component that renders the [Tldraw](?) component. This is the only React you have to write:
+
+```tsx
+import { Tldraw } from 'tldraw'
+import 'tldraw/tldraw.css'
+
+export function TldrawWrapper() {
+	return <Tldraw />
+}
+```
+
+Mount it into a container element when the host framework creates that element, and unmount it when the framework tears it down:
+
+```ts
+import { createElement } from 'react'
+import { createRoot, Root } from 'react-dom/client'
+import { TldrawWrapper } from './TldrawWrapper'
+
+let root: Root | null = null
+
+function mount(element: HTMLElement) {
+	root = createRoot(element)
+	root.render(createElement(TldrawWrapper))
+}
+
+function unmount() {
+	root?.unmount()
+	root = null
+}
+```
+
+Unmounting matters. The editor registers event listeners and starts timers, and `root.unmount()` is what releases them.
+
+## Dependencies
+
+Add `react` and `react-dom` as regular dependencies, not dev dependencies. They ship in your bundle:
+
+```bash
+npm install tldraw react react-dom
+```
+
+## JSX
+
+Some toolchains, like the Angular CLI, don't compile JSX. You can skip the `.tsx` file and pass the [Tldraw](?) component to `createElement` directly:
+
+```ts
+import { createElement } from 'react'
+import { createRoot } from 'react-dom/client'
+import { Tldraw } from 'tldraw'
+import 'tldraw/tldraw.css'
+
+createRoot(element).render(createElement(Tldraw))
+```
+
+Props go in the second argument: `createElement(Tldraw, { persistenceKey: 'my-key' })`.
+
+## Container size
+
+The [Tldraw](?) component fills its parent, so the container element needs an explicit size. A container with no height renders nothing:
+
+```css
+.tldraw-container {
+	position: fixed;
+	inset: 0;
+}
+```
+
+## Talking to the editor
+
+The React root is a separate tree from your app, so host framework state doesn't flow into it. To send values in, call `root.render()` again with new props. To get values out, pass a callback:
+
+```ts
+import { Editor } from 'tldraw'
+
+let editor: Editor | null = null
+
+root.render(
+	createElement(Tldraw, {
+		onMount: (mountedEditor) => {
+			editor = mountedEditor
+		},
+	})
+)
+```
+
+From there you have the whole [Editor](?) API, which you can call from your framework's own event handlers.
+
+## Server rendering
+
+Mount hooks run in the browser, so the React root is never created during server rendering. The container element renders empty and fills in once the browser takes over. Frameworks that render their components on the server need an explicit client-only escape hatch, which the individual guides cover.
+
+## Guides
+
+| Framework                      | Notes                                        |
+| ------------------------------ | -------------------------------------------- |
+| [Vue](/frameworks/vue)         | Mount from `onMounted` and `onUnmounted`.    |
+| [Nuxt](/frameworks/nuxt)       | Vue, plus a client-only wrapper.             |
+| [Svelte](/frameworks/svelte)   | Mount from `onMount`.                        |
+| [Angular](/frameworks/angular) | Mount from `ngAfterViewInit`, no JSX needed. |
