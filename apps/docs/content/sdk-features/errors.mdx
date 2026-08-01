@@ -84,6 +84,8 @@ const MyShapeErrorFallback: TLShapeErrorFallbackComponent = ({ error }) => {
 
 Set a fallback to `null` to disable the error boundary at that level. Errors will propagate to the parent boundary instead.
 
+See the [custom error capture example](https://github.com/tldraw/tldraw/tree/main/apps/examples/src/examples/ui/custom-error-capture) for a custom `ErrorFallback`, and the [error boundary example](https://github.com/tldraw/tldraw/tree/main/apps/examples/src/examples/ui/error-boundary) for a custom `ShapeErrorFallback`.
+
 ## Crash handling
 
 When the editor encounters a fatal error during event processing, it enters a crashed state. Listen for this with the `crash` event:
@@ -96,6 +98,8 @@ editor.on('crash', ({ error }) => {
 ```
 
 When crashed, the editor stops processing new events to prevent further damage. The error boundary displays the fallback UI, giving users options to recover.
+
+See the [crash event handling example](https://github.com/tldraw/tldraw/tree/main/apps/examples/src/examples/ui/crash-event-handling) for a working demo.
 
 ## Error annotations
 
@@ -122,7 +126,21 @@ const MyErrorFallback: TLErrorFallbackComponent = ({ error }) => {
 }
 ```
 
-Annotations include `tags` (key-value pairs for categorization) and `extras` (additional context data).
+Annotations include `tags` (key-value pairs for categorization) and `extras` (additional context data). Add your own with `annotateError` before letting an error propagate to a boundary:
+
+```tsx
+import { annotateError } from 'tldraw'
+
+try {
+	riskyOperation()
+} catch (error) {
+	annotateError(error, {
+		tags: { origin: 'my-feature' },
+		extras: { documentId },
+	})
+	throw error
+}
+```
 
 ## ErrorBoundary component
 
@@ -166,9 +184,10 @@ The `fallback` prop accepts a component that receives `{ error: unknown; editor?
 
 ### Functions
 
-| Function                     | Description                                          |
-| ---------------------------- | ---------------------------------------------------- |
-| `getErrorAnnotations(error)` | Retrieve tags and extras attached to an error object |
+| Function                            | Description                                          |
+| ----------------------------------- | ---------------------------------------------------- |
+| `getErrorAnnotations(error)`        | Retrieve tags and extras attached to an error object |
+| `annotateError(error, annotations)` | Attach tags and extras to an error object            |
 
 ### Events
 
@@ -180,3 +199,4 @@ The `fallback` prop accepts a component that receives `{ error: unknown; editor?
 
 - **[Error boundary](https://github.com/tldraw/tldraw/tree/main/apps/examples/src/examples/ui/error-boundary)** — Customize ShapeErrorFallback to display a custom message when shapes throw errors.
 - **[Custom error capture](https://github.com/tldraw/tldraw/tree/main/apps/examples/src/examples/ui/custom-error-capture)** — Override ErrorFallback to create a custom error screen with annotations for debugging.
+- **[Crash event handling](https://github.com/tldraw/tldraw/tree/main/apps/examples/src/examples/ui/crash-event-handling)** — Listen for the editor's crash event and report fatal errors to an error tracking service.

@@ -1,0 +1,6 @@
+.crash-event-handling__button {
+	position: absolute;
+	top: 100px;
+	left: 100px;
+	pointer-events: all;
+}
